@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="pt">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Portal de Trabalhos Académicos</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <main class="page-shell">
+      <section class="card" aria-labelledby="page-title">
+        <header class="card-header">
+          <h1 id="page-title">Portal de Submissão de Trabalhos</h1>
+          <p class="subtitle">Gestão simples e institucional de envios académicos</p>
+        </header>
+
+        <div class="main-actions" role="group" aria-label="Ações principais">
+          <button id="open-submit" class="btn btn-primary" type="button">Enviar trabalho</button>
+          <button id="open-status" class="btn btn-secondary" type="button">Status Trabalho</button>
+        </div>
+
+        <section id="submit-section" class="feature-section hidden" aria-live="polite">
+          <h2>Submissão de Trabalho</h2>
+          <form id="submit-form" novalidate>
+            <div class="form-group">
+              <label for="student-name">Nome</label>
+              <select id="student-name" name="name" required>
+                <option value="">Seleccione o nome</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="work-file">Anexar trabalho</label>
+              <input id="work-file" name="file" type="file" required />
+            </div>
+
+            <button id="submit-work" class="btn btn-primary" type="submit">Submeter trabalho</button>
+          </form>
+          <p id="submit-feedback" class="feedback" role="status"></p>
+        </section>
+
+        <section id="status-section" class="feature-section hidden" aria-live="polite">
+          <h2>Status do Trabalho</h2>
+          <p class="status-message">Área de consulta de estado em desenvolvimento.</p>
+        </section>
+      </section>
+    </main>
+
+    <script src="script.js"></script>
+  </body>
+</html>
