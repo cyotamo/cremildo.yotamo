@@ -1,5 +1,5 @@
 // URL centralizada para futura integração com Google Apps Script / backend.
-const WEB_APP_URL = "drive/folders/16A5Cf7wtWcJNhKOJkR1JgzMo1JoHZzsC";
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzlsR6RPluumYwDdyXbv7aVlGuPPd94bO6efh2CDzoqxXbiWMvphqATgi2Q8pTgZaax/exec";
 
 const openSubmitBtn = document.getElementById("open-submit");
 const openStatusBtn = document.getElementById("open-status");
