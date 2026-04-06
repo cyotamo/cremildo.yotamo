@@ -25,15 +25,17 @@ function setFeedback(message, type = "") {
   if (type) submitFeedback.classList.add(type);
 }
 
-// Carrega nomes do endpoint remoto; usa fallback de exemplo em caso de falha.
+function resetNameSelect() {
+  studentNameSelect.innerHTML = '<option value="">Seleccione o nome</option>';
+}
+
+// Carrega nomes reais do backend Google Apps Script.
 async function loadNames() {
   setFeedback("A carregar nomes...");
-
-  // Mantém a opção default sempre presente.
-  studentNameSelect.innerHTML = '<option value="">Seleccione o nome</option>';
+  resetNameSelect();
 
   try {
-    const response = await fetch(WEB_APP_URL, {
+    const response = await fetch(`${WEB_APP_URL}?acao=listarNomes`, {
       method: "GET"
     });
 
@@ -42,7 +44,12 @@ async function loadNames() {
     }
 
     const payload = await response.json();
-    const names = Array.isArray(payload?.names) ? payload.names : [];
+    const isSuccess = payload?.sucesso === true;
+    const names = Array.isArray(payload?.nomes) ? payload.nomes : [];
+
+    if (!isSuccess) {
+      throw new Error("Resposta sem sucesso.");
+    }
 
     names.forEach((name) => {
       const option = document.createElement("option");
@@ -51,28 +58,14 @@ async function loadNames() {
       studentNameSelect.appendChild(option);
     });
 
-    // Se a API responder vazia, mantém experiência funcional com exemplos.
-    if (!names.length) {
-      addFallbackNames();
-    }
-
+    namesLoaded = true;
     setFeedback("");
   } catch (error) {
     console.error("Erro ao carregar nomes:", error);
-    addFallbackNames();
+    namesLoaded = false;
+    resetNameSelect();
     setFeedback("Erro ao carregar nomes.", "error");
   }
-}
-
-function addFallbackNames() {
-  const fallbackNames = ["Ana Silva", "Bruno Santos", "Carla Mendes"];
-
-  fallbackNames.forEach((name) => {
-    const option = document.createElement("option");
-    option.value = name;
-    option.textContent = `${name} (exemplo)`;
-    studentNameSelect.appendChild(option);
-  });
 }
 
 // Abre secção de envio e carrega nomes uma única vez por sessão.
@@ -80,7 +73,6 @@ openSubmitBtn.addEventListener("click", async () => {
   showSection(submitSection);
   if (!namesLoaded) {
     await loadNames();
-    namesLoaded = true;
   }
 });
 
