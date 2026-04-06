@@ -41,7 +41,16 @@
 
         <section id="status-section" class="feature-section hidden" aria-live="polite">
           <h2>Status do Trabalho</h2>
-          <p class="status-message">Área de consulta de estado em desenvolvimento.</p>
+          <div class="status-controls">
+            <div class="form-group status-name-group">
+              <label for="status-student-name">Nome</label>
+              <select id="status-student-name" name="status-name">
+                <option value="">Seleccione o nome</option>
+              </select>
+            </div>
+            <button id="search-status" class="btn btn-secondary status-search-btn" type="button">Buscar</button>
+          </div>
+          <div id="status-result" class="status-result" role="status"></div>
         </section>
       </section>
     </main>

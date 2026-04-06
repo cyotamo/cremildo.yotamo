@@ -9,6 +9,9 @@ const submitSection = document.getElementById("submit-section");
 const statusSection = document.getElementById("status-section");
 const submitForm = document.getElementById("submit-form");
 const studentNameSelect = document.getElementById("student-name");
+const statusStudentNameSelect = document.getElementById("status-student-name");
+const searchStatusBtn = document.getElementById("search-status");
+const statusResult = document.getElementById("status-result");
 const fileInput = document.getElementById("work-file");
 const submitFeedback = document.getElementById("submit-feedback");
 
@@ -27,8 +30,31 @@ function setFeedback(message, type = "") {
   if (type) submitFeedback.classList.add(type);
 }
 
-function resetNameSelect() {
-  studentNameSelect.innerHTML = '<option value="">Seleccione o nome</option>';
+function setStatusResult(message, type = "", asHtml = false) {
+  statusResult.classList.remove("success", "error");
+  if (type) statusResult.classList.add(type);
+
+  if (asHtml) {
+    statusResult.innerHTML = message;
+    return;
+  }
+
+  statusResult.textContent = message;
+}
+
+function resetNameSelect(selectElement) {
+  selectElement.innerHTML = '<option value="">Seleccione o nome</option>';
+}
+
+function preencherSelectComNomes(selectElement, names) {
+  resetNameSelect(selectElement);
+
+  names.forEach((name) => {
+    const option = document.createElement("option");
+    option.value = name;
+    option.textContent = name;
+    selectElement.appendChild(option);
+  });
 }
 
 function fileToBase64(file) {
@@ -46,10 +72,24 @@ function fileToBase64(file) {
   });
 }
 
+function formatarDataHora(dataHoraIso) {
+  if (!dataHoraIso) {
+    return "Data/Hora não disponível";
+  }
+
+  const data = new Date(dataHoraIso);
+  if (Number.isNaN(data.getTime())) {
+    return dataHoraIso;
+  }
+
+  return data.toLocaleString("pt-PT");
+}
+
 // Carrega nomes reais do backend Google Apps Script.
 async function loadNames() {
   setFeedback("A carregar nomes...");
-  resetNameSelect();
+  resetNameSelect(studentNameSelect);
+  resetNameSelect(statusStudentNameSelect);
 
   try {
     const response = await fetch(`${WEB_APP_URL}?acao=listarNomes`, {
@@ -68,19 +108,16 @@ async function loadNames() {
       throw new Error("Resposta sem sucesso.");
     }
 
-    names.forEach((name) => {
-      const option = document.createElement("option");
-      option.value = name;
-      option.textContent = name;
-      studentNameSelect.appendChild(option);
-    });
+    preencherSelectComNomes(studentNameSelect, names);
+    preencherSelectComNomes(statusStudentNameSelect, names);
 
     namesLoaded = true;
     setFeedback("");
   } catch (error) {
     console.error("Erro ao carregar nomes:", error);
     namesLoaded = false;
-    resetNameSelect();
+    resetNameSelect(studentNameSelect);
+    resetNameSelect(statusStudentNameSelect);
     setFeedback("Erro ao carregar nomes.", "error");
   }
 }
@@ -93,10 +130,66 @@ openSubmitBtn.addEventListener("click", async () => {
   }
 });
 
-// Abre apenas a secção de status com placeholder solicitado.
-openStatusBtn.addEventListener("click", () => {
+openStatusBtn.addEventListener("click", async () => {
+  console.log("Abrir secção Status Trabalho");
   showSection(statusSection);
+  setStatusResult("");
+
+  if (!namesLoaded) {
+    await loadNames();
+  }
 });
+
+async function buscarStatusTrabalho() {
+  const nome = statusStudentNameSelect.value;
+  console.log("Nome para consulta:", nome);
+
+  if (!nome) {
+    setStatusResult("Seleccione o nome.", "error");
+    return;
+  }
+
+  setStatusResult("A buscar...");
+
+  try {
+    const url = `${WEB_APP_URL}?acao=consultarStatus&nome=${encodeURIComponent(nome)}`;
+    console.log("URL de consulta:", url);
+
+    const response = await fetch(url, {
+      method: "GET"
+    });
+
+    if (!response.ok) {
+      throw new Error(`Falha HTTP: ${response.status}`);
+    }
+
+    const data = await response.json();
+    console.log("Resposta status:", data);
+
+    if (!data?.sucesso) {
+      setStatusResult(data?.mensagem || "Nenhum feedback encontrado para o estudante.", "error");
+      return;
+    }
+
+    const dataHoraFormatada = formatarDataHora(data?.dataHora);
+    const linkFeedback = data?.feedbackUrl
+      ? `<a href="${data.feedbackUrl}" target="_blank" rel="noopener noreferrer">Abrir feedback</a>`
+      : "Link de feedback não disponível";
+
+    const resultadoHtml = `
+      <p><strong>Nome:</strong> ${data?.nome || nome}</p>
+      <p><strong>Data/Hora:</strong> ${dataHoraFormatada}</p>
+      <p><strong>Feedback:</strong> ${linkFeedback}</p>
+    `;
+
+    setStatusResult(resultadoHtml, "success", true);
+  } catch (erro) {
+    console.error("Erro ao consultar status:", erro);
+    setStatusResult("Erro ao consultar status.", "error");
+  }
+}
+
+searchStatusBtn.addEventListener("click", buscarStatusTrabalho);
 
 async function enviarTrabalho(event) {
   event.preventDefault();
