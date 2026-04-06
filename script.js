@@ -29,6 +29,21 @@ function resetNameSelect() {
   studentNameSelect.innerHTML = '<option value="">Seleccione o nome</option>';
 }
 
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      const resultado = reader.result;
+      const base64 = resultado.split(",")[1];
+      resolve(base64);
+    };
+
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
 // Carrega nomes reais do backend Google Apps Script.
 async function loadNames() {
   setFeedback("A carregar nomes...");
@@ -81,38 +96,71 @@ openStatusBtn.addEventListener("click", () => {
   showSection(statusSection);
 });
 
-// Envio preparado com FormData para suportar ficheiros.
-submitForm.addEventListener("submit", async (event) => {
+async function enviarTrabalho(event) {
   event.preventDefault();
+  console.log("Submissão iniciada");
 
-  const selectedName = studentNameSelect.value;
-  const selectedFile = fileInput.files[0];
+  const nome = studentNameSelect.value;
+  const ficheiro = fileInput.files[0];
 
-  if (!selectedName || !selectedFile) {
-    setFeedback("Por favor, seleccione o nome e anexe o trabalho.", "error");
+  console.log("Nome seleccionado:", nome);
+  console.log("Ficheiro seleccionado:", ficheiro);
+
+  if (!nome) {
+    setFeedback("Seleccione o nome.", "error");
     return;
   }
 
-  const formData = new FormData();
-  formData.append("name", selectedName);
-  formData.append("file", selectedFile);
+  if (!ficheiro) {
+    setFeedback("Seleccione o ficheiro.", "error");
+    return;
+  }
 
   setFeedback("A enviar trabalho...");
 
   try {
+    console.log("A converter ficheiro para base64...");
+    const ficheiroBase64 = await fileToBase64(ficheiro);
+    const payload = {
+      acao: "enviarTrabalho",
+      nome,
+      fileName: ficheiro.name,
+      mimeType: ficheiro.type || "application/octet-stream",
+      fileBase64: ficheiroBase64
+    };
+    console.log("Payload pronto para envio:", payload);
+
     const response = await fetch(WEB_APP_URL, {
       method: "POST",
-      body: formData
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(payload)
     });
 
     if (!response.ok) {
       throw new Error(`Falha HTTP: ${response.status}`);
     }
 
-    setFeedback("Trabalho enviado com sucesso.", "success");
-    submitForm.reset();
-  } catch (error) {
-    console.error("Erro ao enviar trabalho:", error);
-    setFeedback("Erro ao enviar trabalho.", "error");
+    const data = await response.json();
+    console.log("Resposta do back-end:", data);
+
+    if (!data?.sucesso) {
+      throw new Error(data?.mensagem || "Erro ao enviar trabalho.");
+    }
+
+    const versao = data?.dados?.versao;
+    const mensagemSucesso = versao
+      ? `Trabalho enviado com sucesso. Guardado em ${versao}.`
+      : (data?.mensagem || "Trabalho enviado com sucesso.");
+
+    setFeedback(mensagemSucesso, "success");
+    fileInput.value = "";
+  } catch (erro) {
+    console.error("Erro ao enviar trabalho:", erro);
+    setFeedback(erro?.message || "Erro ao enviar trabalho.", "error");
   }
-});
+}
+
+// Liga o formulário existente à função de envio do trabalho.
+submitForm.addEventListener("submit", enviarTrabalho);
