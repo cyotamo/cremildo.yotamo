@@ -34,6 +34,23 @@ function renderTabelaTrabalhos(registos) {
           <td>${nome}</td>
           <td>${linkHtml}</td>
           <td>${dataHora}</td>
+          <td>
+            <input
+              type="file"
+              class="feedback-file-input"
+              data-feedback-file
+              aria-label="Selecionar ficheiro corrigido para ${nome}"
+            />
+          </td>
+          <td class="feedback-action">
+            <button
+              type="button"
+              class="btn btn-secondary feedback-send-btn"
+              data-feedback-send
+            >
+              Enviar
+            </button>
+          </td>
         </tr>
       `;
     })
@@ -46,6 +63,8 @@ function renderTabelaTrabalhos(registos) {
           <th>Nome</th>
           <th>Trabalho</th>
           <th>Data/Hora</th>
+          <th>Ficheiro corrigido</th>
+          <th>Acção</th>
         </tr>
       </thead>
       <tbody>
@@ -55,6 +74,79 @@ function renderTabelaTrabalhos(registos) {
   `;
 
   setManagerMessage("");
+}
+
+function converterFicheiroParaBase64(ficheiro) {
+  return new Promise((resolve, reject) => {
+    const leitor = new FileReader();
+    leitor.onload = () => {
+      const resultado = leitor.result;
+      if (typeof resultado !== "string") {
+        reject(new Error("Não foi possível converter o ficheiro."));
+        return;
+      }
+
+      const base64 = resultado.includes(",") ? resultado.split(",")[1] : resultado;
+      resolve(base64);
+    };
+    leitor.onerror = () => reject(leitor.error || new Error("Falha na leitura do ficheiro."));
+    leitor.readAsDataURL(ficheiro);
+  });
+}
+
+async function enviarFeedback(botaoEnviar) {
+  const linha = botaoEnviar.closest("tr");
+  const nome = linha?.querySelector("td")?.textContent?.trim() || "-";
+  const inputFicheiro = linha?.querySelector("[data-feedback-file]");
+  const ficheiro = inputFicheiro?.files?.[0];
+
+  console.log("Enviar feedback para:", nome);
+  console.log("Ficheiro feedback:", ficheiro);
+
+  if (!ficheiro) {
+    setManagerMessage("Selecione um ficheiro corrigido antes de enviar.", "error");
+    return;
+  }
+
+  botaoEnviar.disabled = true;
+  setManagerMessage("A enviar feedback...");
+
+  try {
+    const base64DoFicheiro = await converterFicheiroParaBase64(ficheiro);
+    const payload = {
+      acao: "enviarFeedback",
+      nome,
+      fileName: ficheiro.name,
+      mimeType: ficheiro.type || "application/octet-stream",
+      fileBase64: base64DoFicheiro
+    };
+
+    console.log("Payload feedback:", payload);
+
+    const response = await fetch(WEB_APP_URL, {
+      method: "POST",
+      body: JSON.stringify(payload)
+    });
+
+    if (!response.ok) {
+      throw new Error(`Falha HTTP: ${response.status}`);
+    }
+
+    const data = await response.json();
+    console.log("Resposta feedback:", data);
+
+    if (!data?.sucesso) {
+      throw new Error(data?.mensagem || "Erro ao enviar feedback.");
+    }
+
+    setManagerMessage("Feedback enviado com sucesso.", "success");
+    inputFicheiro.value = "";
+  } catch (erro) {
+    console.error("Erro ao enviar feedback:", erro);
+    setManagerMessage("Erro ao enviar feedback.", "error");
+  } finally {
+    botaoEnviar.disabled = false;
+  }
 }
 
 async function carregarTrabalhosEnviados() {
@@ -94,4 +186,13 @@ async function carregarTrabalhosEnviados() {
 loadWorksBtn.addEventListener("click", () => {
   console.log("Clique no botão Trabalhos Enviados");
   carregarTrabalhosEnviados();
+});
+
+worksList.addEventListener("click", (evento) => {
+  const botaoEnviar = evento.target.closest("[data-feedback-send]");
+  if (!botaoEnviar) {
+    return;
+  }
+
+  enviarFeedback(botaoEnviar);
 });
