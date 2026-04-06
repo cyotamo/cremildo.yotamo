@@ -1,5 +1,7 @@
 // URL centralizada para futura integração com Google Apps Script / backend.
 const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzlsR6RPluumYwDdyXbv7aVlGuPPd94bO6efh2CDzoqxXbiWMvphqATgi2Q8pTgZaax/exec";
+// Apps Script: no doPost, usar JSON.parse(e.postData.contents).
+// Publicação exigida: acesso "Anyone" e URL final com /exec.
 
 const openSubmitBtn = document.getElementById("open-submit");
 const openStatusBtn = document.getElementById("open-status");
@@ -128,13 +130,10 @@ async function enviarTrabalho(event) {
       mimeType: ficheiro.type || "application/octet-stream",
       fileBase64: ficheiroBase64
     };
-    console.log("Payload pronto para envio:", payload);
+    console.log("Payload:", payload);
 
     const response = await fetch(WEB_APP_URL, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
       body: JSON.stringify(payload)
     });
 
@@ -143,7 +142,7 @@ async function enviarTrabalho(event) {
     }
 
     const data = await response.json();
-    console.log("Resposta do back-end:", data);
+    console.log("Resposta:", data);
 
     if (!data?.sucesso) {
       throw new Error(data?.mensagem || "Erro ao enviar trabalho.");
@@ -157,7 +156,7 @@ async function enviarTrabalho(event) {
     setFeedback(mensagemSucesso, "success");
     fileInput.value = "";
   } catch (erro) {
-    console.error("Erro ao enviar trabalho:", erro);
+    console.error("Erro:", erro);
     setFeedback(erro?.message || "Erro ao enviar trabalho.", "error");
   }
 }
