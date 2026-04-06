@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="pt">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Painel do Gestor</title>
+    <link rel="stylesheet" href="style.css" />
+    <style>
+      .manager-actions {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 1.2rem;
+      }
+
+      .manager-message {
+        min-height: 1.25rem;
+        margin: 0;
+        color: var(--text-secondary);
+        font-size: 0.92rem;
+      }
+
+      .manager-message.error {
+        color: var(--error);
+      }
+
+      .manager-message.success {
+        color: var(--success);
+      }
+
+      .table-shell {
+        margin-top: 1rem;
+        overflow-x: auto;
+      }
+
+      .works-table {
+        width: 100%;
+        border-collapse: collapse;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        overflow: hidden;
+      }
+
+      .works-table th,
+      .works-table td {
+        border-bottom: 1px solid var(--border);
+        text-align: left;
+        padding: 0.75rem 0.85rem;
+        font-size: 0.92rem;
+      }
+
+      .works-table thead th {
+        background-color: var(--brand-secondary);
+        color: var(--brand-primary);
+        font-weight: 700;
+      }
+
+      .works-table tbody tr:last-child td {
+        border-bottom: none;
+      }
+
+      .works-table a {
+        color: var(--brand-primary);
+        font-weight: 600;
+        text-decoration: none;
+      }
+
+      .works-table a:hover {
+        text-decoration: underline;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page-shell">
+      <section class="card" aria-labelledby="manager-title">
+        <header class="card-header">
+          <h1 id="manager-title">Painel do Gestor</h1>
+          <p class="subtitle">Visualização institucional dos trabalhos enviados pelos estudantes</p>
+        </header>
+
+        <div class="manager-actions">
+          <button id="load-works" class="btn btn-primary" type="button">Trabalhos Enviados</button>
+        </div>
+
+        <p id="manager-message" class="manager-message" role="status" aria-live="polite"></p>
+        <section id="works-list" class="table-shell" aria-live="polite"></section>
+      </section>
+    </main>
+
+    <script src="gestor.js"></script>
+  </body>
+</html>
