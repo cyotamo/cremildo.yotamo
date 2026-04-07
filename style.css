@@ -124,7 +124,7 @@ input[type="password"]:focus-visible {
 }
 
 .hidden {
-  display: none;
+  display: none !important;
 }
 
 form {
@@ -288,5 +288,49 @@ input[type="password"] {
 
   .status-search-btn {
     min-width: 0;
+  }
+}
+
+
+.app-topbar {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.brand-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  text-align: left;
+}
+
+.brand-icon {
+  width: 56px;
+  height: 56px;
+  object-fit: contain;
+  border-radius: 14px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+  background: #ffffff;
+  padding: 4px;
+}
+
+.brand-text h1 {
+  margin: 0;
+}
+
+.brand-text .subtitle {
+  margin-top: 0.25rem;
+}
+
+@media (max-width: 640px) {
+  .brand-wrap {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .brand-icon {
+    width: 64px;
+    height: 64px;
   }
 }

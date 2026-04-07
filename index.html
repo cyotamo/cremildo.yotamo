@@ -4,14 +4,33 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Portal de Trabalhos Académicos</title>
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#1e88e5" />
+    <link rel="icon" href="/icon.png" type="image/png" />
+    <link rel="apple-touch-icon" href="/icon.png" />
+    <link rel="canonical" href="https://yotamonline.web.app/" />
+    <meta property="og:title" content="Portal de Trabalhos Académicos" />
+    <meta property="og:description" content="Portal de submissão e acompanhamento de trabalhos académicos." />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://yotamonline.web.app/" />
+    <meta property="og:image" content="https://yotamonline.web.app/icon.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Portal de Trabalhos Académicos" />
+    <meta name="twitter:description" content="Portal de submissão e acompanhamento de trabalhos académicos." />
+    <meta name="twitter:image" content="https://yotamonline.web.app/icon.png" />
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
     <main class="page-shell">
       <section class="card" aria-labelledby="page-title">
-        <header class="card-header">
-          <h1 id="page-title">Portal de Submissão de Trabalhos</h1>
-          <p class="subtitle">Envie aqui o seu trabalho</p>
+        <header class="card-header app-topbar">
+          <div class="brand-wrap">
+            <img src="/icon.png" alt="Ícone do Portal" class="brand-icon" />
+            <div class="brand-text">
+              <h1 id="page-title">Portal de Submissão de Trabalhos</h1>
+              <p class="subtitle">Envie aqui o seu trabalho</p>
+            </div>
+          </div>
         </header>
 
         <div class="main-actions" role="group" aria-label="Ações principais">
@@ -19,6 +38,10 @@
           <button id="open-status" class="btn btn-secondary" type="button">Status Trabalho</button>
           <button id="open-login" class="btn btn-secondary" type="button">Login Gestor</button>
         </div>
+
+        <button id="install-app" class="btn btn-secondary hidden" type="button">
+          Instalar aplicação
+        </button>
 
         <section id="submit-section" class="feature-section hidden" aria-live="polite">
           <h2>Submissão de Trabalho</h2>
