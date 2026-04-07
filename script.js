@@ -14,6 +14,7 @@ const searchStatusBtn = document.getElementById("search-status");
 const statusResult = document.getElementById("status-result");
 const fileInput = document.getElementById("work-file");
 const submitFeedback = document.getElementById("submit-feedback");
+const openLoginBtn = document.getElementById("open-login");
 
 let namesLoaded = false;
 
@@ -136,6 +137,9 @@ openStatusBtn.addEventListener("click", async () => {
   }
 });
 
+openLoginBtn.addEventListener("click", () => {
+  window.location.href = "login.html";
+});
 
 async function buscarStatusTrabalho() {
   const nome = statusStudentNameSelect.value;
