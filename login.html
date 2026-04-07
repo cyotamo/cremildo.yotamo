@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="pt">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login do Gestor</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <main class="page-shell">
+      <section class="card" aria-labelledby="login-title">
+        <header class="card-header">
+          <h1 id="login-title">Acesso do Gestor</h1>
+          <p class="subtitle">Faça login para abrir o painel de gestão.</p>
+        </header>
+
+        <form id="login-form" novalidate>
+          <div class="form-group">
+            <label for="manager-email">Email</label>
+            <input id="manager-email" name="email" type="email" autocomplete="username" required />
+          </div>
+
+          <div class="form-group">
+            <label for="manager-password">Senha</label>
+            <input
+              id="manager-password"
+              name="password"
+              type="password"
+              autocomplete="current-password"
+              minlength="6"
+              required
+            />
+          </div>
+
+          <button class="btn btn-primary" type="submit">Entrar</button>
+          <button id="back-home" class="btn btn-secondary" type="button">Voltar ao início</button>
+          <p id="login-feedback" class="feedback" role="status"></p>
+        </form>
+      </section>
+    </main>
+
+    <script type="module" src="login.js"></script>
+  </body>
+</html>
