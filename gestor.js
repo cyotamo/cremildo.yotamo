@@ -42,6 +42,10 @@ function redirecionarParaLogin() {
   window.location.replace("login.html");
 }
 
+function redirecionarParaInicio() {
+  window.location.replace("index.html");
+}
+
 function setManagerMessage(message, type = "") {
   managerMessage.textContent = message;
   managerMessage.classList.remove("success", "error");
@@ -231,7 +235,7 @@ logoutManagerBtn.addEventListener("click", async () => {
   try {
     await signOut(auth);
   } finally {
-    redirecionarParaLogin();
+    redirecionarParaInicio();
   }
 });
 
