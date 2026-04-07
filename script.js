@@ -1,7 +1,34 @@
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+import {
+  getAuth,
+  setPersistence,
+  browserLocalPersistence,
+  onAuthStateChanged,
+  signInWithEmailAndPassword
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+
 // URL centralizada para futura integração com Google Apps Script / backend.
 const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzlsR6RPluumYwDdyXbv7aVlGuPPd94bO6efh2CDzoqxXbiWMvphqATgi2Q8pTgZaax/exec";
 // Apps Script: no doPost, usar JSON.parse(e.postData.contents).
 // Publicação exigida: acesso "Anyone" e URL final com /exec.
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDqGzOD86QDSbjBZk0zeCp7xcD7H924dqk",
+  authDomain: "yotamonline.firebaseapp.com",
+  projectId: "yotamonline",
+  storageBucket: "yotamonline.firebasestorage.app",
+  messagingSenderId: "530369661303",
+  appId: "1:530369661303:web:d22c45104a636415333972"
+};
+
+const MANAGER_EMAIL_ATIVO = "cyotamo@yahoo.com.br";
+const ALLOWED_MANAGER_EMAILS = new Set([MANAGER_EMAIL_ATIVO]);
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+setPersistence(auth, browserLocalPersistence).catch((error) => {
+  console.error("Falha ao aplicar persistência de sessão:", error);
+});
 
 const openSubmitBtn = document.getElementById("open-submit");
 const openStatusBtn = document.getElementById("open-status");
@@ -14,10 +41,16 @@ const searchStatusBtn = document.getElementById("search-status");
 const statusResult = document.getElementById("status-result");
 const fileInput = document.getElementById("work-file");
 const submitFeedback = document.getElementById("submit-feedback");
+const openLoginBtn = document.getElementById("open-login");
+const loginModal = document.getElementById("login-modal");
+const closeLoginBtn = document.getElementById("close-login");
+const loginForm = document.getElementById("login-form");
+const managerEmailInput = document.getElementById("manager-email");
+const managerPasswordInput = document.getElementById("manager-password");
+const loginFeedback = document.getElementById("login-feedback");
 
 let namesLoaded = false;
 
-// Mostra uma única secção de cada vez, logo abaixo dos botões.
 function showSection(sectionToShow) {
   submitSection.classList.add("hidden");
   statusSection.classList.add("hidden");
@@ -40,6 +73,35 @@ function setStatusResult(message, type = "", asHtml = false) {
   }
 
   statusResult.textContent = message;
+}
+
+function setLoginFeedback(message, type = "") {
+  loginFeedback.textContent = message;
+  loginFeedback.classList.remove("success", "error");
+  if (type) {
+    loginFeedback.classList.add(type);
+  }
+}
+
+function normalizeEmail(email) {
+  return (email || "").trim().toLowerCase();
+}
+
+function emailGestorPermitido(email) {
+  return ALLOWED_MANAGER_EMAILS.has(normalizeEmail(email));
+}
+
+function openLoginModal() {
+  loginModal.classList.remove("hidden");
+  loginModal.setAttribute("aria-hidden", "false");
+  setLoginFeedback("");
+  managerPasswordInput.value = "";
+  managerEmailInput.focus();
+}
+
+function closeLoginModal() {
+  loginModal.classList.add("hidden");
+  loginModal.setAttribute("aria-hidden", "true");
 }
 
 function resetNameSelect(selectElement) {
@@ -85,7 +147,6 @@ function formatarDataHora(dataHoraIso) {
   return data.toLocaleString("pt-PT");
 }
 
-// Carrega nomes reais do backend Google Apps Script.
 async function loadNames() {
   setFeedback("A carregar nomes...");
   resetNameSelect(studentNameSelect);
@@ -122,7 +183,6 @@ async function loadNames() {
   }
 }
 
-// Abre secção de envio e carrega nomes uma única vez por sessão.
 openSubmitBtn.addEventListener("click", async () => {
   showSection(submitSection);
   if (!namesLoaded) {
@@ -131,7 +191,6 @@ openSubmitBtn.addEventListener("click", async () => {
 });
 
 openStatusBtn.addEventListener("click", async () => {
-  console.log("Abrir secção Status Trabalho");
   showSection(statusSection);
   setStatusResult("");
 
@@ -140,9 +199,28 @@ openStatusBtn.addEventListener("click", async () => {
   }
 });
 
+openLoginBtn.addEventListener("click", () => {
+  openLoginModal();
+});
+
+closeLoginBtn.addEventListener("click", () => {
+  closeLoginModal();
+});
+
+loginModal.addEventListener("click", (event) => {
+  if (event.target === loginModal) {
+    closeLoginModal();
+  }
+});
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && !loginModal.classList.contains("hidden")) {
+    closeLoginModal();
+  }
+});
+
 async function buscarStatusTrabalho() {
   const nome = statusStudentNameSelect.value;
-  console.log("Nome para consulta:", nome);
 
   if (!nome) {
     setStatusResult("Seleccione o nome.", "error");
@@ -153,7 +231,6 @@ async function buscarStatusTrabalho() {
 
   try {
     const url = `${WEB_APP_URL}?acao=consultarStatus&nome=${encodeURIComponent(nome)}`;
-    console.log("URL de consulta:", url);
 
     const response = await fetch(url, {
       method: "GET"
@@ -164,7 +241,6 @@ async function buscarStatusTrabalho() {
     }
 
     const data = await response.json();
-    console.log("Resposta status:", data);
 
     if (!data?.sucesso) {
       setStatusResult(data?.mensagem || "Nenhum feedback encontrado para o estudante.", "error");
@@ -193,13 +269,9 @@ searchStatusBtn.addEventListener("click", buscarStatusTrabalho);
 
 async function enviarTrabalho(event) {
   event.preventDefault();
-  console.log("Submissão iniciada");
 
   const nome = studentNameSelect.value;
   const ficheiro = fileInput.files[0];
-
-  console.log("Nome seleccionado:", nome);
-  console.log("Ficheiro seleccionado:", ficheiro);
 
   if (!nome) {
     setFeedback("Seleccione o nome.", "error");
@@ -214,7 +286,6 @@ async function enviarTrabalho(event) {
   setFeedback("A enviar trabalho...");
 
   try {
-    console.log("A converter ficheiro para base64...");
     const ficheiroBase64 = await fileToBase64(ficheiro);
     const payload = {
       acao: "enviarTrabalho",
@@ -223,7 +294,6 @@ async function enviarTrabalho(event) {
       mimeType: ficheiro.type || "application/octet-stream",
       fileBase64: ficheiroBase64
     };
-    console.log("Payload:", payload);
 
     const response = await fetch(WEB_APP_URL, {
       method: "POST",
@@ -235,7 +305,6 @@ async function enviarTrabalho(event) {
     }
 
     const data = await response.json();
-    console.log("Resposta:", data);
 
     if (!data?.sucesso) {
       throw new Error(data?.mensagem || "Erro ao enviar trabalho.");
@@ -244,7 +313,7 @@ async function enviarTrabalho(event) {
     const versao = data?.dados?.versao;
     const mensagemSucesso = versao
       ? `Trabalho enviado com sucesso. Guardado em ${versao}.`
-      : (data?.mensagem || "Trabalho enviado com sucesso.");
+      : data?.mensagem || "Trabalho enviado com sucesso.";
 
     setFeedback(mensagemSucesso, "success");
     fileInput.value = "";
@@ -254,5 +323,50 @@ async function enviarTrabalho(event) {
   }
 }
 
-// Liga o formulário existente à função de envio do trabalho.
 submitForm.addEventListener("submit", enviarTrabalho);
+
+loginForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+
+  const email = normalizeEmail(managerEmailInput.value);
+  const password = managerPasswordInput.value;
+
+  if (!email || !password) {
+    setLoginFeedback("Informe email e senha.", "error");
+    return;
+  }
+
+  if (!emailGestorPermitido(email)) {
+    setLoginFeedback("Este email não tem permissão de gestor.", "error");
+    return;
+  }
+
+  setLoginFeedback("A autenticar...");
+
+  try {
+    const credencial = await signInWithEmailAndPassword(auth, email, password);
+    const emailAutenticado = normalizeEmail(credencial.user?.email);
+
+    if (!emailGestorPermitido(emailAutenticado)) {
+      setLoginFeedback("Conta autenticada sem perfil de gestor.", "error");
+      return;
+    }
+
+    setLoginFeedback("Login válido. Redirecionando...", "success");
+    window.location.href = "gestor.html";
+  } catch (error) {
+    console.error("Erro de login:", error);
+    setLoginFeedback("Falha no login. Verifique credenciais no Firebase.", "error");
+  }
+});
+
+onAuthStateChanged(auth, (user) => {
+  const emailAutenticado = normalizeEmail(user?.email);
+  if (user && emailGestorPermitido(emailAutenticado)) {
+    openLoginBtn.textContent = "Gestor autenticado";
+    openLoginBtn.classList.add("btn-primary");
+  } else {
+    openLoginBtn.textContent = "Login Gestor";
+    openLoginBtn.classList.remove("btn-primary");
+  }
+});

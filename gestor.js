@@ -1,9 +1,46 @@
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+import {
+  getAuth,
+  onAuthStateChanged,
+  signOut
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+
 // URL centralizada para integração com Google Apps Script / backend.
 const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzlsR6RPluumYwDdyXbv7aVlGuPPd94bO6efh2CDzoqxXbiWMvphqATgi2Q8pTgZaax/exec";
 
+const firebaseConfig = {
+  apiKey: "AIzaSyDqGzOD86QDSbjBZk0zeCp7xcD7H924dqk",
+  authDomain: "yotamonline.firebaseapp.com",
+  projectId: "yotamonline",
+  storageBucket: "yotamonline.firebasestorage.app",
+  messagingSenderId: "530369661303",
+  appId: "1:530369661303:web:d22c45104a636415333972"
+};
+
+const MANAGER_EMAIL_ATIVO = "cyotamo@yahoo.com.br";
+const ALLOWED_MANAGER_EMAILS = new Set([MANAGER_EMAIL_ATIVO]);
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+
 const loadWorksBtn = document.getElementById("load-works");
+const logoutManagerBtn = document.getElementById("logout-manager");
 const managerMessage = document.getElementById("manager-message");
 const worksList = document.getElementById("works-list");
+
+let gestorAutenticado = false;
+
+function normalizeEmail(email) {
+  return (email || "").trim().toLowerCase();
+}
+
+function emailGestorPermitido(email) {
+  return ALLOWED_MANAGER_EMAILS.has(normalizeEmail(email));
+}
+
+function redirecionarParaLogin() {
+  window.location.replace("index.html");
+}
 
 function setManagerMessage(message, type = "") {
   managerMessage.textContent = message;
@@ -95,13 +132,16 @@ function converterFicheiroParaBase64(ficheiro) {
 }
 
 async function enviarFeedback(botaoEnviar) {
+  if (!gestorAutenticado) {
+    setManagerMessage("Sessão inválida. Faça login novamente.", "error");
+    redirecionarParaLogin();
+    return;
+  }
+
   const linha = botaoEnviar.closest("tr");
   const nome = linha?.querySelector("td")?.textContent?.trim() || "-";
   const inputFicheiro = linha?.querySelector("[data-feedback-file]");
   const ficheiro = inputFicheiro?.files?.[0];
-
-  console.log("Enviar feedback para:", nome);
-  console.log("Ficheiro feedback:", ficheiro);
 
   if (!ficheiro) {
     setManagerMessage("Selecione um ficheiro corrigido antes de enviar.", "error");
@@ -121,8 +161,6 @@ async function enviarFeedback(botaoEnviar) {
       fileBase64: base64DoFicheiro
     };
 
-    console.log("Payload feedback:", payload);
-
     const response = await fetch(WEB_APP_URL, {
       method: "POST",
       body: JSON.stringify(payload)
@@ -133,7 +171,6 @@ async function enviarFeedback(botaoEnviar) {
     }
 
     const data = await response.json();
-    console.log("Resposta feedback:", data);
 
     if (!data?.sucesso) {
       throw new Error(data?.mensagem || "Erro ao enviar feedback.");
@@ -150,12 +187,16 @@ async function enviarFeedback(botaoEnviar) {
 }
 
 async function carregarTrabalhosEnviados() {
-  console.log("Carregar trabalhos enviados");
+  if (!gestorAutenticado) {
+    setManagerMessage("Sessão inválida. Faça login novamente.", "error");
+    redirecionarParaLogin();
+    return;
+  }
+
   worksList.innerHTML = "";
   setManagerMessage("A carregar trabalhos...");
 
   const url = `${WEB_APP_URL}?acao=listarTrabalhosEnviados`;
-  console.log("URL:", url);
 
   try {
     const response = await fetch(url, {
@@ -167,7 +208,6 @@ async function carregarTrabalhosEnviados() {
     }
 
     const data = await response.json();
-    console.log("Resposta:", data);
 
     if (!data?.sucesso) {
       worksList.innerHTML = "";
@@ -184,8 +224,15 @@ async function carregarTrabalhosEnviados() {
 }
 
 loadWorksBtn.addEventListener("click", () => {
-  console.log("Clique no botão Trabalhos Enviados");
   carregarTrabalhosEnviados();
+});
+
+logoutManagerBtn.addEventListener("click", async () => {
+  try {
+    await signOut(auth);
+  } finally {
+    redirecionarParaLogin();
+  }
 });
 
 worksList.addEventListener("click", (evento) => {
@@ -195,4 +242,16 @@ worksList.addEventListener("click", (evento) => {
   }
 
   enviarFeedback(botaoEnviar);
+});
+
+onAuthStateChanged(auth, (user) => {
+  const emailAutenticado = normalizeEmail(user?.email);
+  const autorizado = Boolean(user) && emailGestorPermitido(emailAutenticado);
+
+  gestorAutenticado = autorizado;
+
+  if (!autorizado) {
+    setManagerMessage("Acesso restrito. Faça login para continuar.", "error");
+    redirecionarParaLogin();
+  }
 });
