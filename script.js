@@ -3,6 +3,47 @@ const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzlsR6RPluumYwDdyXb
 // Apps Script: no doPost, usar JSON.parse(e.postData.contents).
 // Publicação exigida: acesso "Anyone" e URL final com /exec.
 
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", async () => {
+    try {
+      await navigator.serviceWorker.register("/service-worker.js");
+      console.log("Service Worker registado com sucesso.");
+    } catch (error) {
+      console.error("Erro ao registar Service Worker:", error);
+    }
+  });
+}
+
+let deferredPrompt;
+const installButton = document.getElementById("install-app");
+
+window.addEventListener("beforeinstallprompt", (event) => {
+  event.preventDefault();
+  deferredPrompt = event;
+
+  if (installButton) {
+    installButton.classList.remove("hidden");
+  }
+});
+
+if (installButton) {
+  installButton.addEventListener("click", async () => {
+    if (!deferredPrompt) return;
+
+    deferredPrompt.prompt();
+    await deferredPrompt.userChoice;
+    deferredPrompt = null;
+    installButton.classList.add("hidden");
+  });
+}
+
+window.addEventListener("appinstalled", () => {
+  console.log("Aplicação instalada com sucesso.");
+  if (installButton) {
+    installButton.classList.add("hidden");
+  }
+});
+
 const openSubmitBtn = document.getElementById("open-submit");
 const openStatusBtn = document.getElementById("open-status");
 const submitSection = document.getElementById("submit-section");

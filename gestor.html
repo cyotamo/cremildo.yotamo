@@ -4,6 +4,16 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Painel do Gestor</title>
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#1e88e5" />
+    <link rel="icon" href="/icon.png" type="image/png" />
+    <link rel="apple-touch-icon" href="/icon.png" />
+    <link rel="canonical" href="https://yotamonline.web.app/gestor.html" />
+    <meta property="og:title" content="Painel do Gestor" />
+    <meta property="og:description" content="Painel institucional para visualização dos trabalhos submetidos." />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://yotamonline.web.app/gestor.html" />
+    <meta property="og:image" content="https://yotamonline.web.app/icon.png" />
     <link rel="stylesheet" href="style.css" />
     <style>
       .manager-actions {
@@ -87,9 +97,14 @@
   <body>
     <main class="page-shell">
       <section class="card" aria-labelledby="manager-title">
-        <header class="card-header">
-          <h1 id="manager-title">Painel do Gestor</h1>
-          <p class="subtitle">Visualização institucional dos trabalhos enviados pelos estudantes</p>
+        <header class="card-header app-topbar">
+          <div class="brand-wrap">
+            <img src="/icon.png" alt="Ícone do Portal" class="brand-icon" />
+            <div class="brand-text">
+              <h1 id="manager-title">Painel do Gestor</h1>
+              <p class="subtitle">Visualização institucional dos trabalhos enviados pelos estudantes</p>
+            </div>
+          </div>
         </header>
 
         <div class="manager-actions">
