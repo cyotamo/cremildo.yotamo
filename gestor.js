@@ -39,7 +39,7 @@ function emailGestorPermitido(email) {
 }
 
 function redirecionarParaLogin() {
-  window.location.replace("index.html");
+  window.location.replace("login.html");
 }
 
 function setManagerMessage(message, type = "") {
