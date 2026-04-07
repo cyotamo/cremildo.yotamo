@@ -9,6 +9,7 @@
       .manager-actions {
         display: flex;
         justify-content: center;
+        gap: 0.75rem;
         margin-bottom: 1.2rem;
       }
 
@@ -93,6 +94,7 @@
 
         <div class="manager-actions">
           <button id="load-works" class="btn btn-primary" type="button">Trabalhos Enviados</button>
+          <button id="logout-manager" class="btn btn-secondary" type="button">Terminar sessão</button>
         </div>
 
         <p id="manager-message" class="manager-message" role="status" aria-live="polite"></p>
@@ -100,6 +102,6 @@
       </section>
     </main>
 
-    <script src="gestor.js"></script>
+    <script type="module" src="gestor.js"></script>
   </body>
 </html>

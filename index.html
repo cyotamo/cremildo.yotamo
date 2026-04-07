@@ -17,6 +17,7 @@
         <div class="main-actions" role="group" aria-label="Ações principais">
           <button id="open-submit" class="btn btn-primary" type="button">Enviar trabalho</button>
           <button id="open-status" class="btn btn-secondary" type="button">Status Trabalho</button>
+          <button id="open-login" class="btn btn-secondary" type="button">Login Gestor</button>
         </div>
 
         <section id="submit-section" class="feature-section hidden" aria-live="polite">
@@ -55,6 +56,36 @@
       </section>
     </main>
 
-    <script src="script.js"></script>
+    <div id="login-modal" class="modal-backdrop hidden" aria-hidden="true">
+      <section class="modal" role="dialog" aria-modal="true" aria-labelledby="login-modal-title">
+        <button id="close-login" class="modal-close" type="button" aria-label="Fechar modal de login">×</button>
+        <h2 id="login-modal-title">Acesso do Gestor</h2>
+        <p class="modal-subtitle">Faça login para abrir o painel de gestão.</p>
+
+        <form id="login-form" class="modal-form" novalidate>
+          <div class="form-group">
+            <label for="manager-email">Email</label>
+            <input id="manager-email" name="email" type="email" autocomplete="username" required />
+          </div>
+
+          <div class="form-group">
+            <label for="manager-password">Senha</label>
+            <input
+              id="manager-password"
+              name="password"
+              type="password"
+              autocomplete="current-password"
+              minlength="6"
+              required
+            />
+          </div>
+
+          <button class="btn btn-primary" type="submit">Entrar</button>
+          <p id="login-feedback" class="feedback" role="status"></p>
+        </form>
+      </section>
+    </div>
+
+    <script type="module" src="script.js"></script>
   </body>
 </html>
