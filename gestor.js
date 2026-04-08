@@ -64,58 +64,72 @@ function setManagerMessage(message, type = "") {
   }
 }
 
+function escaparHtml(texto) {
+  return String(texto || "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
+function formatarDataParaTabela(valorData) {
+  if (!valorData) return "-";
+
+  const data = new Date(valorData);
+  if (Number.isNaN(data.getTime())) {
+    return escaparHtml(valorData);
+  }
+
+  return new Intl.DateTimeFormat("pt-PT", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit"
+  }).format(data);
+}
+
 function renderTabelaTrabalhos(registos) {
   if (!Array.isArray(registos) || registos.length === 0) {
     worksList.innerHTML = "";
-    setManagerMessage("Nenhum trabalho encontrado.");
+    setManagerMessage("Nenhum nome encontrado na planilha.", "error");
     return;
   }
 
-  const linhas = registos
-    .map((trabalho) => {
-      const nome = trabalho?.nome || "-";
-      const dataHora = trabalho?.dataHora || "-";
-      const urlTrabalho = trabalho?.trabalhoUrl;
+  const linhas = registos.map((registo) => {
+      const nome = escaparHtml(registo?.nome || "-");
+      const enviado = Boolean(registo?.enviado);
+      const statusLabel = enviado ? "Enviado" : "Não enviado";
+      const statusClass = enviado ? "sent" : "pending";
+      const dataEnvio = enviado ? formatarDataParaTabela(registo?.dataHora) : "-";
+      const dataEnvioHtml = escaparHtml(dataEnvio);
+      const dataIso = registo?.dataHora ? new Date(registo.dataHora).getTime() : 0;
+      const urlTrabalho = registo?.trabalhoUrl;
       const linkHtml = urlTrabalho
-        ? `<a href="${urlTrabalho}" target="_blank" rel="noopener noreferrer">Abrir trabalho</a>`
-        : "Link indisponível";
+        ? `<a href="${escaparHtml(urlTrabalho)}" target="_blank" rel="noopener noreferrer">Ver</a>`
+        : "-";
 
       return `
-        <tr>
+        <tr data-order="${dataIso}">
           <td>${nome}</td>
-          <td>${linkHtml}</td>
-          <td>${dataHora}</td>
           <td>
-            <input
-              type="file"
-              class="feedback-file-input"
-              data-feedback-file
-              aria-label="Selecionar ficheiro corrigido para ${nome}"
-            />
+            <span class="status-badge ${statusClass}">${statusLabel}</span>
           </td>
-          <td class="feedback-action">
-            <button
-              type="button"
-              class="btn btn-secondary feedback-send-btn"
-              data-feedback-send
-            >
-              Enviar
-            </button>
-          </td>
+          <td>${dataEnvioHtml}</td>
+          <td>${linkHtml}</td>
         </tr>
       `;
-    })
-    .join("");
+    }).join("");
 
   worksList.innerHTML = `
     <table class="works-table">
       <thead>
         <tr>
           <th>Nome</th>
-          <th>Trabalho</th>
-          <th>Data/Hora</th>
-          <th>Ficheiro corrigido</th>
-          <th>Acção</th>
+          <th>Status</th>
+          <th>Data de envio</th>
+          <th>Ficheiro</th>
         </tr>
       </thead>
       <tbody>
@@ -127,79 +141,6 @@ function renderTabelaTrabalhos(registos) {
   setManagerMessage("");
 }
 
-function converterFicheiroParaBase64(ficheiro) {
-  return new Promise((resolve, reject) => {
-    const leitor = new FileReader();
-    leitor.onload = () => {
-      const resultado = leitor.result;
-      if (typeof resultado !== "string") {
-        reject(new Error("Não foi possível converter o ficheiro."));
-        return;
-      }
-
-      const base64 = resultado.includes(",") ? resultado.split(",")[1] : resultado;
-      resolve(base64);
-    };
-    leitor.onerror = () => reject(leitor.error || new Error("Falha na leitura do ficheiro."));
-    leitor.readAsDataURL(ficheiro);
-  });
-}
-
-async function enviarFeedback(botaoEnviar) {
-  if (!gestorAutenticado) {
-    setManagerMessage("Sessão inválida. Faça login novamente.", "error");
-    redirecionarParaLogin();
-    return;
-  }
-
-  const linha = botaoEnviar.closest("tr");
-  const nome = linha?.querySelector("td")?.textContent?.trim() || "-";
-  const inputFicheiro = linha?.querySelector("[data-feedback-file]");
-  const ficheiro = inputFicheiro?.files?.[0];
-
-  if (!ficheiro) {
-    setManagerMessage("Selecione um ficheiro corrigido antes de enviar.", "error");
-    return;
-  }
-
-  botaoEnviar.disabled = true;
-  setManagerMessage("A enviar feedback...");
-
-  try {
-    const base64DoFicheiro = await converterFicheiroParaBase64(ficheiro);
-    const payload = {
-      acao: "enviarFeedback",
-      nome,
-      fileName: ficheiro.name,
-      mimeType: ficheiro.type || "application/octet-stream",
-      fileBase64: base64DoFicheiro
-    };
-
-    const response = await fetch(WEB_APP_URL, {
-      method: "POST",
-      body: JSON.stringify(payload)
-    });
-
-    if (!response.ok) {
-      throw new Error(`Falha HTTP: ${response.status}`);
-    }
-
-    const data = await response.json();
-
-    if (!data?.sucesso) {
-      throw new Error(data?.mensagem || "Erro ao enviar feedback.");
-    }
-
-    setManagerMessage("Feedback enviado com sucesso.", "success");
-    inputFicheiro.value = "";
-  } catch (erro) {
-    console.error("Erro ao enviar feedback:", erro);
-    setManagerMessage("Erro ao enviar feedback.", "error");
-  } finally {
-    botaoEnviar.disabled = false;
-  }
-}
-
 async function carregarTrabalhosEnviados() {
   if (!gestorAutenticado) {
     setManagerMessage("Sessão inválida. Faça login novamente.", "error");
@@ -208,32 +149,62 @@ async function carregarTrabalhosEnviados() {
   }
 
   worksList.innerHTML = "";
-  setManagerMessage("A carregar trabalhos...");
-
-  const url = `${WEB_APP_URL}?acao=listarTrabalhosEnviados`;
+  setManagerMessage("A carregar lista de estudantes...");
 
   try {
-    const response = await fetch(url, {
-      method: "GET"
+    const [nomesResponse, trabalhosResponse] = await Promise.all([
+      fetch(`${WEB_APP_URL}?acao=listarNomes`, { method: "GET" }),
+      fetch(`${WEB_APP_URL}?acao=listarTrabalhosEnviados`, { method: "GET" })
+    ]);
+
+    if (!nomesResponse.ok || !trabalhosResponse.ok) {
+      throw new Error(`Falha HTTP: nomes=${nomesResponse.status} trabalhos=${trabalhosResponse.status}`);
+    }
+
+    const nomesData = await nomesResponse.json();
+    const trabalhosData = await trabalhosResponse.json();
+
+    if (!nomesData?.sucesso) {
+      throw new Error(nomesData?.mensagem || "Erro ao carregar nomes.");
+    }
+
+    if (!trabalhosData?.sucesso) {
+      throw new Error(trabalhosData?.mensagem || "Erro ao carregar trabalhos enviados.");
+    }
+
+    const nomes = Array.isArray(nomesData?.nomes) ? nomesData.nomes : [];
+    const trabalhos = Array.isArray(trabalhosData?.dados) ? trabalhosData.dados : [];
+
+    const mapaTrabalhos = new Map();
+    trabalhos.forEach((trabalho) => {
+      const chave = normalizeEmail(trabalho?.nome);
+      if (!chave) return;
+
+      const existente = mapaTrabalhos.get(chave);
+      const dataAtual = new Date(trabalho?.dataHora || 0).getTime() || 0;
+      const dataExistente = new Date(existente?.dataHora || 0).getTime() || 0;
+
+      if (!existente || dataAtual >= dataExistente) {
+        mapaTrabalhos.set(chave, trabalho);
+      }
     });
 
-    if (!response.ok) {
-      throw new Error(`Falha HTTP: ${response.status}`);
-    }
+    const registosCompletos = nomes.map((nome) => {
+      const nomeLimpo = String(nome || "").trim();
+      const trabalho = mapaTrabalhos.get(normalizeEmail(nomeLimpo));
+      return {
+        nome: nomeLimpo || "-",
+        enviado: Boolean(trabalho),
+        dataHora: trabalho?.dataHora || "",
+        trabalhoUrl: trabalho?.trabalhoUrl || ""
+      };
+    });
 
-    const data = await response.json();
-
-    if (!data?.sucesso) {
-      worksList.innerHTML = "";
-      setManagerMessage(data?.mensagem || "Erro ao carregar trabalhos.", "error");
-      return;
-    }
-
-    renderTabelaTrabalhos(data?.dados);
+    renderTabelaTrabalhos(registosCompletos);
   } catch (erro) {
     console.error("Erro ao carregar trabalhos:", erro);
     worksList.innerHTML = "";
-    setManagerMessage("Erro ao carregar trabalhos.", "error");
+    setManagerMessage("Erro ao carregar lista de estudantes/trabalhos.", "error");
   }
 }
 
@@ -247,15 +218,6 @@ logoutManagerBtn.addEventListener("click", async () => {
   } finally {
     redirecionarParaInicio();
   }
-});
-
-worksList.addEventListener("click", (evento) => {
-  const botaoEnviar = evento.target.closest("[data-feedback-send]");
-  if (!botaoEnviar) {
-    return;
-  }
-
-  enviarFeedback(botaoEnviar);
 });
 
 onAuthStateChanged(auth, (user) => {
