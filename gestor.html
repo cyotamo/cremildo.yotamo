@@ -65,6 +65,14 @@
         font-weight: 700;
       }
 
+      .works-table tbody tr:nth-child(even) {
+        background-color: #fafcff;
+      }
+
+      .works-table tbody tr:hover {
+        background-color: #f2f7ff;
+      }
+
       .works-table tbody tr:last-child td {
         border-bottom: none;
       }
@@ -79,18 +87,25 @@
         text-decoration: underline;
       }
 
-      .feedback-file-input {
-        width: 100%;
-        max-width: 260px;
-        font-size: 0.85rem;
+      .status-badge {
+        display: inline-flex;
+        align-items: center;
+        border-radius: 999px;
+        font-weight: 700;
+        font-size: 0.78rem;
+        padding: 0.2rem 0.55rem;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
       }
 
-      .feedback-action {
-        white-space: nowrap;
+      .status-badge.sent {
+        background: rgba(31, 122, 79, 0.13);
+        color: var(--success);
       }
 
-      .feedback-send-btn {
-        min-width: 92px;
+      .status-badge.pending {
+        background: rgba(120, 132, 150, 0.15);
+        color: var(--text-secondary);
       }
     </style>
   </head>
