@@ -44,6 +44,8 @@ window.addEventListener("appinstalled", () => {
   }
 });
 
+const orientandosToggleBtn = document.getElementById("orientandos-toggle");
+const orientandosSubmenu = document.getElementById("orientandos-submenu");
 const openSubmitBtn = document.getElementById("open-submit");
 const openStatusBtn = document.getElementById("open-status");
 const submitSection = document.getElementById("submit-section");
@@ -59,10 +61,42 @@ const openLoginBtn = document.getElementById("open-login");
 
 let namesLoaded = false;
 
+function setSubmenuExpanded(isExpanded) {
+  orientandosSubmenu.classList.toggle("expanded", isExpanded);
+  orientandosToggleBtn.setAttribute("aria-expanded", String(isExpanded));
+}
+
+function setActiveMenuButton(activeButton) {
+  [openSubmitBtn, openStatusBtn].forEach((button) => {
+    button.classList.toggle("active", button === activeButton);
+  });
+}
+
 function showSection(sectionToShow) {
   submitSection.classList.add("hidden");
   statusSection.classList.add("hidden");
   sectionToShow.classList.remove("hidden");
+}
+
+async function activatePanel(panel) {
+  setSubmenuExpanded(true);
+
+  if (panel === "submit") {
+    setActiveMenuButton(openSubmitBtn);
+    showSection(submitSection);
+    if (!namesLoaded) {
+      await loadNames();
+    }
+    return;
+  }
+
+  setActiveMenuButton(openStatusBtn);
+  showSection(statusSection);
+  setStatusResult("");
+
+  if (!namesLoaded) {
+    await loadNames();
+  }
 }
 
 function setFeedback(message, type = "") {
@@ -162,20 +196,17 @@ async function loadNames() {
   }
 }
 
+orientandosToggleBtn.addEventListener("click", () => {
+  const isExpanded = orientandosSubmenu.classList.contains("expanded");
+  setSubmenuExpanded(!isExpanded);
+});
+
 openSubmitBtn.addEventListener("click", async () => {
-  showSection(submitSection);
-  if (!namesLoaded) {
-    await loadNames();
-  }
+  await activatePanel("submit");
 });
 
 openStatusBtn.addEventListener("click", async () => {
-  showSection(statusSection);
-  setStatusResult("");
-
-  if (!namesLoaded) {
-    await loadNames();
-  }
+  await activatePanel("status");
 });
 
 openLoginBtn.addEventListener("click", () => {
@@ -287,3 +318,5 @@ async function enviarTrabalho(event) {
 }
 
 submitForm.addEventListener("submit", enviarTrabalho);
+
+activatePanel("submit");
