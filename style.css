@@ -62,7 +62,7 @@ body {
 .brand-wrap {
   display: flex;
   align-items: center;
-  gap: 0.9rem;
+  justify-content: center;
   text-align: left;
 }
 
@@ -74,18 +74,6 @@ body {
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
   background: #ffffff;
   padding: 4px;
-}
-
-.brand-text h1 {
-  margin: 0;
-  font-size: 1.05rem;
-  line-height: 1.2;
-}
-
-.subtitle {
-  margin: 0.4rem 0 0;
-  color: var(--text-secondary);
-  font-size: 0.84rem;
 }
 
 .menu-nav {
@@ -181,20 +169,67 @@ input[type="password"]:focus-visible {
 
 .menu-group-btn {
   width: 100%;
+  position: relative;
+  padding-right: 2.25rem;
 }
 
-.btn-submenu {
+.menu-group-btn::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: 0.95rem;
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: translateY(-65%) rotate(45deg);
+  transition: transform 0.2s ease;
+}
+
+.menu-group-btn[aria-expanded="true"]::after {
+  transform: translateY(-35%) rotate(-135deg);
+}
+
+.submenu-btn {
   width: 100%;
-  background-color: #f5f8fe;
-  color: var(--brand-primary);
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0;
+  padding: 12px 16px;
+  min-height: 44px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: #475569;
+  font-size: 15px;
   font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
 }
 
-.btn-submenu.active {
-  background-color: var(--brand-secondary);
-  border-left: 4px solid var(--brand-primary);
-  padding-left: calc(1rem - 4px);
-  font-weight: 700;
+.submenu-btn:hover {
+  background: #f1f5f9;
+  color: #1e293b;
+}
+
+.submenu-btn.active {
+  background: #eaf2ff;
+  color: #1d4ed8;
+  font-weight: 600;
+  position: relative;
+}
+
+.submenu-btn.active::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 8px;
+  bottom: 8px;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: #2563eb;
 }
 
 .feature-section {
