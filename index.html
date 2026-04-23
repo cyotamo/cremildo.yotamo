@@ -21,9 +21,13 @@
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
-    <main class="page-shell">
-      <section class="card" aria-labelledby="page-title">
-        <header class="card-header app-topbar">
+    <div class="header-topo">
+      <button id="open-login" class="btn btn-top-login" type="button">Login Gestor</button>
+    </div>
+
+    <main class="page-shell layout-portal">
+      <aside class="menu-lateral" aria-label="Menu de navegação">
+        <header class="app-topbar" aria-labelledby="page-title">
           <div class="brand-wrap">
             <img src="/icon.png" alt="Ícone do Portal" class="brand-icon" />
             <div class="brand-text">
@@ -33,17 +37,30 @@
           </div>
         </header>
 
-        <div class="main-actions" role="group" aria-label="Ações principais">
-          <button id="open-submit" class="btn btn-primary" type="button">Enviar trabalho</button>
-          <button id="open-status" class="btn btn-secondary" type="button">Status Trabalho</button>
-          <button id="open-login" class="btn btn-secondary" type="button">Login Gestor</button>
-        </div>
+        <nav class="menu-nav">
+          <button
+            id="orientandos-toggle"
+            class="btn btn-primary menu-group-btn"
+            type="button"
+            aria-expanded="true"
+            aria-controls="orientandos-submenu"
+          >
+            Orientandos
+          </button>
+
+          <div id="orientandos-submenu" class="submenu-container expanded">
+            <button id="open-status" class="btn btn-submenu" type="button">Status do trabalho</button>
+            <button id="open-submit" class="btn btn-submenu active" type="button">Enviar trabalho</button>
+          </div>
+        </nav>
 
         <button id="install-app" class="btn btn-secondary hidden" type="button">
           Instalar aplicação
         </button>
+      </aside>
 
-        <section id="submit-section" class="feature-section hidden" aria-live="polite">
+      <section class="area-conteudo" aria-live="polite">
+        <section id="submit-section" class="feature-section" data-panel="submit">
           <h2>Submissão de Trabalho</h2>
           <form id="submit-form" novalidate>
             <div class="form-group">
@@ -63,7 +80,7 @@
           <p id="submit-feedback" class="feedback" role="status"></p>
         </section>
 
-        <section id="status-section" class="feature-section hidden" aria-live="polite">
+        <section id="status-section" class="feature-section hidden" data-panel="status">
           <h2>Status do Trabalho</h2>
           <div class="status-controls">
             <div class="form-group status-name-group">
