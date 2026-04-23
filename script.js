@@ -79,8 +79,6 @@ function showSection(sectionToShow) {
 }
 
 async function activatePanel(panel) {
-  setSubmenuExpanded(true);
-
   if (panel === "submit") {
     setActiveMenuButton(openSubmitBtn);
     showSection(submitSection);

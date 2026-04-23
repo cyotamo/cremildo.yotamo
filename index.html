@@ -38,11 +38,16 @@
             id="orientandos-toggle"
             class="btn btn-primary menu-group-btn"
             type="button"
-            aria-expanded="true"
+            aria-expanded="false"
             aria-controls="orientandos-submenu"
           >
             Orientandos
           </button>
+          <div id="orientandos-submenu" class="submenu-container">
+            <button id="open-status" class="submenu-btn" type="button">Status do trabalho</button>
+            <button id="open-submit" class="submenu-btn active" type="button">Enviar trabalho</button>
+          </div>
+
           <button id="alunos-toggle" class="btn btn-primary menu-group-btn" type="button">Alunos</button>
           <button id="publicacoes-toggle" class="btn btn-primary menu-group-btn" type="button">
             Publicacacoes
@@ -53,11 +58,6 @@
           <button id="projectos-toggle" class="btn btn-primary menu-group-btn" type="button">
             Projectos
           </button>
-
-          <div id="orientandos-submenu" class="submenu-container expanded">
-            <button id="open-status" class="submenu-btn" type="button">Status do trabalho</button>
-            <button id="open-submit" class="submenu-btn active" type="button">Enviar trabalho</button>
-          </div>
         </nav>
 
         <button id="install-app" class="btn btn-secondary hidden" type="button">
