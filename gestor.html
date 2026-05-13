@@ -161,6 +161,105 @@
         white-space: nowrap;
         border: 0;
       }
+
+
+      @media (max-width: 680px) {
+        .manager-shell {
+          min-height: auto;
+        }
+
+        .manager-content {
+          padding-top: 1rem;
+        }
+
+        .manager-content-heading {
+          align-items: flex-start;
+          flex-direction: column;
+          gap: 0.35rem;
+        }
+
+        .table-shell {
+          margin-top: 0.4rem;
+          overflow-x: visible;
+        }
+
+        .works-table,
+        .works-table thead,
+        .works-table tbody,
+        .works-table tr,
+        .works-table th,
+        .works-table td {
+          display: block;
+        }
+
+        .works-table {
+          border: 0;
+          border-radius: 0;
+        }
+
+        .works-table thead {
+          position: absolute;
+          width: 1px;
+          height: 1px;
+          padding: 0;
+          margin: -1px;
+          overflow: hidden;
+          clip: rect(0, 0, 0, 0);
+          white-space: nowrap;
+          border: 0;
+        }
+
+        .works-table tbody tr {
+          margin-bottom: 0.85rem;
+          overflow: hidden;
+          border: 1px solid var(--border);
+          border-radius: 14px;
+          background: #ffffff;
+          box-shadow: 0 8px 18px rgba(22, 40, 72, 0.08);
+        }
+
+        .works-table tbody tr:nth-child(even),
+        .works-table tbody tr:hover {
+          background: #ffffff;
+        }
+
+        .works-table td {
+          display: grid;
+          grid-template-columns: minmax(7.5rem, 38%) 1fr;
+          align-items: center;
+          gap: 0.75rem;
+          width: 100%;
+          padding: 0.75rem;
+          border-bottom: 1px solid var(--border);
+          word-break: break-word;
+        }
+
+        .works-table td::before {
+          content: attr(data-label);
+          color: var(--text-secondary);
+          font-size: 0.78rem;
+          font-weight: 700;
+          letter-spacing: 0.04em;
+          text-transform: uppercase;
+        }
+
+        .works-table tbody tr:last-child td,
+        .works-table tbody tr td:last-child {
+          border-bottom: none;
+        }
+
+        .corrected-file-input {
+          min-width: 0;
+          width: 100%;
+        }
+      }
+
+      @media (max-width: 420px) {
+        .works-table td {
+          grid-template-columns: 1fr;
+          gap: 0.35rem;
+        }
+      }
     </style>
   </head>
   <body>
