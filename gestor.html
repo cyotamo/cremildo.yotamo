@@ -16,11 +16,42 @@
     <meta property="og:image" content="https://yotamonline.web.app/icon.png" />
     <link rel="stylesheet" href="style.css" />
     <style>
-      .manager-actions {
+      .manager-shell {
+        min-height: calc(100vh - 52px);
+      }
+
+      .manager-menu .app-topbar {
+        margin-bottom: 0.85rem;
+      }
+
+      .manager-menu-title {
+        margin: 0;
+        color: var(--brand-primary);
+        font-size: 0.84rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .manager-submenu {
+        padding-left: 0;
+      }
+
+      .manager-content {
+        display: grid;
+        gap: 0.8rem;
+      }
+
+      .manager-content-heading {
         display: flex;
-        justify-content: center;
-        gap: 0.75rem;
-        margin-bottom: 1.2rem;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+      }
+
+      .manager-content-heading h1 {
+        color: var(--text-primary);
+        font-size: clamp(1.15rem, 2vw, 1.45rem);
       }
 
       .manager-message {
@@ -39,7 +70,7 @@
       }
 
       .table-shell {
-        margin-top: 1rem;
+        margin-top: 0.2rem;
         overflow-x: auto;
       }
 
@@ -87,27 +118,6 @@
         text-decoration: underline;
       }
 
-      .status-badge {
-        display: inline-flex;
-        align-items: center;
-        border-radius: 999px;
-        font-weight: 700;
-        font-size: 0.78rem;
-        padding: 0.2rem 0.55rem;
-        text-transform: uppercase;
-        letter-spacing: 0.3px;
-      }
-
-      .status-badge.sent {
-        background: rgba(31, 122, 79, 0.13);
-        color: var(--success);
-      }
-
-      .status-badge.pending {
-        background: rgba(120, 132, 150, 0.15);
-        color: var(--text-secondary);
-      }
-
       .manager-works-table th:nth-child(4),
       .manager-works-table td:nth-child(4) {
         min-width: 190px;
@@ -148,23 +158,36 @@
     </style>
   </head>
   <body>
-    <main class="page-shell">
-      <section class="card" aria-labelledby="manager-title">
-        <header class="card-header app-topbar">
-          <div class="brand-wrap">
-            <img src="/icon.png" alt="Ícone do Portal" class="brand-icon" />
-            <div class="brand-text">
-              <h1 id="manager-title">Painel do Gestor</h1>
-              <p class="subtitle">Visualização institucional dos trabalhos enviados pelos estudantes</p>
-            </div>
-          </div>
+    <div class="header-topo">
+      <button id="logout-manager" class="btn btn-top-login" type="button">Terminar sessão</button>
+    </div>
+
+    <main class="page-shell layout-portal manager-shell">
+      <aside class="menu-lateral manager-menu" aria-label="Menu do gestor">
+        <header class="app-topbar" aria-label="Painel do gestor">
+          <p class="manager-menu-title">Painel do Gestor</p>
         </header>
 
-        <div class="manager-actions">
-          <button id="load-works" class="btn btn-primary" type="button">Trabalhos Enviados</button>
-          <button id="logout-manager" class="btn btn-secondary" type="button">Terminar sessão</button>
-        </div>
+        <nav class="menu-nav">
+          <button
+            id="orientandos-toggle"
+            class="btn btn-primary menu-group-btn"
+            type="button"
+            aria-expanded="true"
+            aria-controls="orientandos-submenu"
+          >
+            Orientandos
+          </button>
+          <div id="orientandos-submenu" class="submenu-container manager-submenu expanded">
+            <button id="load-works" class="submenu-btn active" type="button">Trabalhos Enviados</button>
+          </div>
+        </nav>
+      </aside>
 
+      <section class="area-conteudo manager-content" aria-labelledby="manager-title">
+        <div class="manager-content-heading">
+          <h1 id="manager-title">Trabalhos Enviados</h1>
+        </div>
         <p id="manager-message" class="manager-message" role="status" aria-live="polite"></p>
         <section id="works-list" class="table-shell" aria-live="polite"></section>
       </section>

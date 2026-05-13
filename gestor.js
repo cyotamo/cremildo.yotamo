@@ -33,12 +33,20 @@ const ALLOWED_MANAGER_EMAILS = new Set([MANAGER_EMAIL_ATIVO]);
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
+const orientandosToggleBtn = document.getElementById("orientandos-toggle");
+const orientandosSubmenu = document.getElementById("orientandos-submenu");
 const loadWorksBtn = document.getElementById("load-works");
 const logoutManagerBtn = document.getElementById("logout-manager");
 const managerMessage = document.getElementById("manager-message");
 const worksList = document.getElementById("works-list");
 
 let gestorAutenticado = false;
+let trabalhosCarregados = false;
+
+function setSubmenuExpanded(isExpanded) {
+  orientandosSubmenu.classList.toggle("expanded", isExpanded);
+  orientandosToggleBtn.setAttribute("aria-expanded", String(isExpanded));
+}
 
 function normalizeEmail(email) {
   return (email || "").trim().toLowerCase();
@@ -218,6 +226,7 @@ async function enviarFicheiroCorrigido(botao) {
 }
 
 async function carregarTrabalhosEnviados() {
+  trabalhosCarregados = true;
   if (!gestorAutenticado) {
     setManagerMessage("Sessão inválida. Faça login novamente.", "error");
     redirecionarParaLogin();
@@ -287,7 +296,14 @@ async function carregarTrabalhosEnviados() {
   }
 }
 
+orientandosToggleBtn.addEventListener("click", () => {
+  const isExpanded = orientandosSubmenu.classList.contains("expanded");
+  setSubmenuExpanded(!isExpanded);
+});
+
 loadWorksBtn.addEventListener("click", () => {
+  setSubmenuExpanded(true);
+  loadWorksBtn.classList.add("active");
   carregarTrabalhosEnviados();
 });
 
@@ -316,5 +332,10 @@ onAuthStateChanged(auth, (user) => {
   if (!autorizado) {
     setManagerMessage("Acesso restrito. Faça login para continuar.", "error");
     redirecionarParaLogin();
+    return;
+  }
+
+  if (!trabalhosCarregados) {
+    carregarTrabalhosEnviados();
   }
 });
