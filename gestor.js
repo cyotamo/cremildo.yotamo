@@ -200,14 +200,14 @@ function renderTabelaTrabalhos(registos) {
 
       return `
         <tr data-order="${dataIso}" data-nome="${nome}" data-data-hora="${escaparHtml(registo?.dataHora || "")}" data-trabalho-url="${urlTrabalho}">
-          <td>${nome}</td>
-          <td><a href="${urlTrabalho}" target="_blank" rel="noopener noreferrer">Abrir trabalho</a></td>
-          <td>${dataEnvioHtml}</td>
-          <td>
+          <td data-label="Nome">${nome}</td>
+          <td data-label="Trabalho"><a href="${urlTrabalho}" target="_blank" rel="noopener noreferrer">Abrir trabalho</a></td>
+          <td data-label="Data/Hora">${dataEnvioHtml}</td>
+          <td data-label="Ficheiro corrigido">
             <label class="visually-hidden" for="${inputId}">Ficheiro corrigido de ${nome}</label>
             <input id="${inputId}" class="corrected-file-input" type="file" />
           </td>
-          <td><button class="btn btn-secondary send-corrected-btn" type="button">Enviar</button></td>
+          <td data-label="Acção"><button class="btn btn-secondary send-corrected-btn" type="button">Enviar</button></td>
         </tr>
       `;
     }).join("");

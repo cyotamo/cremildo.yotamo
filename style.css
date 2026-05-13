@@ -400,3 +400,115 @@ input[type="password"] {
     min-width: 0;
   }
 }
+
+@media (max-width: 680px) {
+  html {
+    width: 100%;
+    overflow-x: hidden;
+  }
+
+  body {
+    overflow-x: hidden;
+    background: linear-gradient(180deg, #ffffff 0%, var(--bg-primary) 42%);
+  }
+
+  .header-topo {
+    justify-content: center;
+    padding: 0.85rem 0.85rem 0;
+  }
+
+  .btn-top-login {
+    width: min(100%, 420px);
+    text-align: center;
+  }
+
+  .page-shell {
+    min-height: auto;
+    padding: 0.85rem;
+  }
+
+  .login-shell {
+    min-height: 100svh;
+    padding: 1rem;
+  }
+
+  .login-card {
+    border-radius: 18px;
+    padding: 1.25rem;
+  }
+
+  .layout-portal {
+    gap: 0.85rem;
+  }
+
+  .menu-lateral,
+  .area-conteudo {
+    border-radius: 16px;
+    box-shadow: 0 10px 24px rgba(22, 40, 72, 0.1);
+  }
+
+  .menu-lateral {
+    padding: 0.85rem;
+  }
+
+  .area-conteudo {
+    padding: 1rem;
+  }
+
+  .brand-icon {
+    width: 46px;
+    height: 46px;
+  }
+
+  .btn,
+  .submenu-btn,
+  select,
+  input[type="file"],
+  input[type="email"],
+  input[type="password"] {
+    font-size: 1rem;
+  }
+
+  .btn,
+  .submenu-btn {
+    min-height: 44px;
+  }
+
+  .menu-group-btn,
+  #submit-work {
+    text-align: center;
+  }
+
+  .submenu-btn {
+    justify-content: center;
+  }
+
+  .submenu-btn.active::before {
+    top: auto;
+    right: 16px;
+    bottom: 5px;
+    left: 16px;
+    width: auto;
+    height: 3px;
+    border-radius: 3px 3px 0 0;
+  }
+
+  .feedback,
+  .status-result {
+    line-height: 1.45;
+  }
+}
+
+@media (max-width: 380px) {
+  .header-topo,
+  .page-shell {
+    padding-left: 0.65rem;
+    padding-right: 0.65rem;
+  }
+
+  .login-card,
+  .menu-lateral,
+  .area-conteudo {
+    border-radius: 14px;
+  }
+}
