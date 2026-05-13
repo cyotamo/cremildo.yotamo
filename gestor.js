@@ -117,6 +117,68 @@ function fileToBase64(file) {
   });
 }
 
+function normalizarTimestamp(valorData) {
+  const timestamp = new Date(valorData || 0).getTime();
+  return Number.isNaN(timestamp) ? 0 : timestamp;
+}
+
+function valorIndicaFeedback(valor) {
+  if (typeof valor === "boolean") return valor;
+  if (valor === null || valor === undefined) return false;
+
+  const texto = String(valor).trim().toLowerCase();
+  return Boolean(texto) && !["false", "nao", "não", "no", "0", "pendente"].includes(texto);
+}
+
+function obterDataFeedback(registo) {
+  return registo?.dataFeedback
+    || registo?.feedbackDataHora
+    || registo?.dataHoraFeedback
+    || registo?.dataCorrecao
+    || registo?.dataHoraCorrecao
+    || registo?.corrigidoEm
+    || registo?.feedbackEnviadoEm
+    || "";
+}
+
+function temFeedbackNoRegisto(registo) {
+  return [
+    registo?.feedbackUrl,
+    registo?.ficheiroCorrigidoUrl,
+    registo?.corrigidoUrl,
+    registo?.correcaoUrl,
+    registo?.feedbackEnviado,
+    registo?.corrigido,
+    registo?.statusFeedback
+  ].some(valorIndicaFeedback);
+}
+
+function trabalhoAindaAguardaFeedback(trabalho, feedback = null) {
+  const dadosFeedback = feedback?.sucesso ? feedback : trabalho;
+  const feedbackConfirmado = feedback?.sucesso === true || temFeedbackNoRegisto(dadosFeedback);
+
+  if (!feedbackConfirmado) {
+    return true;
+  }
+
+  const dataTrabalho = normalizarTimestamp(trabalho?.dataHora);
+  const dataFeedback = normalizarTimestamp(obterDataFeedback(dadosFeedback) || dadosFeedback?.dataHora);
+
+  return Boolean(dataTrabalho && dataFeedback && dataFeedback < dataTrabalho);
+}
+
+async function consultarFeedbackPorNome(nome) {
+  const response = await fetch(`${WEB_APP_URL}?acao=consultarStatus&nome=${encodeURIComponent(nome)}`, {
+    method: "GET"
+  });
+
+  if (!response.ok) {
+    throw new Error(`Falha HTTP ao consultar feedback de ${nome}: ${response.status}`);
+  }
+
+  return response.json();
+}
+
 function renderTabelaTrabalhos(registos) {
   const trabalhosEnviados = Array.isArray(registos)
     ? registos.filter((registo) => registo?.enviado && registo?.trabalhoUrl)
@@ -124,7 +186,7 @@ function renderTabelaTrabalhos(registos) {
 
   if (trabalhosEnviados.length === 0) {
     worksList.innerHTML = "";
-    setManagerMessage("Nenhum trabalho enviado encontrado.", "error");
+    setManagerMessage("Nenhum trabalho enviado a aguardar feedback encontrado.", "error");
     return;
   }
 
@@ -220,6 +282,12 @@ async function enviarFicheiroCorrigido(botao) {
     }
 
     inputFicheiro.value = "";
+    linha.remove();
+
+    if (!worksList.querySelector("tbody tr")) {
+      worksList.innerHTML = "";
+    }
+
     setManagerMessage(data?.mensagem || `Ficheiro corrigido de ${nome} enviado com sucesso.`, "success");
   } catch (erro) {
     console.error("Erro ao enviar ficheiro corrigido:", erro);
@@ -239,7 +307,7 @@ async function carregarTrabalhosEnviados() {
   }
 
   worksList.innerHTML = "";
-  setManagerMessage("A carregar trabalhos enviados...");
+  setManagerMessage("A carregar trabalhos enviados a aguardar feedback...");
 
   try {
     const [nomesResponse, trabalhosResponse] = await Promise.all([
@@ -280,10 +348,26 @@ async function carregarTrabalhosEnviados() {
     });
 
     const nomesValidos = new Set(nomes.map((nome) => normalizeEmail(nome)));
-    const registosEnviados = Array.from(mapaTrabalhos.values())
+    const trabalhosValidos = Array.from(mapaTrabalhos.values())
       .filter((trabalho) => {
         const nomeNormalizado = normalizeEmail(trabalho?.nome);
         return !nomesValidos.size || nomesValidos.has(nomeNormalizado);
+      });
+
+    const resultadosFeedback = await Promise.allSettled(
+      trabalhosValidos.map((trabalho) => consultarFeedbackPorNome(String(trabalho?.nome || "").trim()))
+    );
+
+    const registosPendentes = trabalhosValidos
+      .filter((trabalho, index) => {
+        const resultadoFeedback = resultadosFeedback[index];
+        const feedback = resultadoFeedback?.status === "fulfilled" ? resultadoFeedback.value : null;
+
+        if (resultadoFeedback?.status === "rejected") {
+          console.warn("Não foi possível confirmar o feedback de", trabalho?.nome, resultadoFeedback.reason);
+        }
+
+        return trabalhoAindaAguardaFeedback(trabalho, feedback);
       })
       .map((trabalho) => ({
         nome: String(trabalho?.nome || "").trim() || "-",
@@ -291,9 +375,9 @@ async function carregarTrabalhosEnviados() {
         dataHora: trabalho?.dataHora || "",
         trabalhoUrl: trabalho?.trabalhoUrl || ""
       }))
-      .sort((a, b) => (new Date(b.dataHora || 0).getTime() || 0) - (new Date(a.dataHora || 0).getTime() || 0));
+      .sort((a, b) => normalizarTimestamp(b.dataHora) - normalizarTimestamp(a.dataHora));
 
-    renderTabelaTrabalhos(registosEnviados);
+    renderTabelaTrabalhos(registosPendentes);
   } catch (erro) {
     console.error("Erro ao carregar trabalhos:", erro);
     worksList.innerHTML = "";
