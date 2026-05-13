@@ -107,6 +107,44 @@
         background: rgba(120, 132, 150, 0.15);
         color: var(--text-secondary);
       }
+
+      .manager-works-table th:nth-child(4),
+      .manager-works-table td:nth-child(4) {
+        min-width: 190px;
+      }
+
+      .manager-works-table th:nth-child(5),
+      .manager-works-table td:nth-child(5) {
+        width: 120px;
+      }
+
+      .corrected-file-input {
+        min-width: 170px;
+      }
+
+      .send-corrected-btn {
+        width: 100%;
+        text-align: center;
+      }
+
+      .send-corrected-btn:disabled {
+        cursor: wait;
+        opacity: 0.72;
+        transform: none;
+        box-shadow: none;
+      }
+
+      .visually-hidden {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
     </style>
   </head>
   <body>
