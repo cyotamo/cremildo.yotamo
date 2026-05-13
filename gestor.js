@@ -90,46 +90,62 @@ function formatarDataParaTabela(valorData) {
   }).format(data);
 }
 
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      const result = String(reader.result || "");
+      resolve(result.includes(",") ? result.split(",").pop() : result);
+    };
+
+    reader.onerror = () => reject(reader.error || new Error("Erro ao ler ficheiro."));
+    reader.readAsDataURL(file);
+  });
+}
+
 function renderTabelaTrabalhos(registos) {
-  if (!Array.isArray(registos) || registos.length === 0) {
+  const trabalhosEnviados = Array.isArray(registos)
+    ? registos.filter((registo) => registo?.enviado && registo?.trabalhoUrl)
+    : [];
+
+  if (trabalhosEnviados.length === 0) {
     worksList.innerHTML = "";
-    setManagerMessage("Nenhum nome encontrado na planilha.", "error");
+    setManagerMessage("Nenhum trabalho enviado encontrado.", "error");
     return;
   }
 
-  const linhas = registos.map((registo) => {
+  const linhas = trabalhosEnviados.map((registo, index) => {
       const nome = escaparHtml(registo?.nome || "-");
-      const enviado = Boolean(registo?.enviado);
-      const statusLabel = enviado ? "Enviado" : "Não enviado";
-      const statusClass = enviado ? "sent" : "pending";
-      const dataEnvio = enviado ? formatarDataParaTabela(registo?.dataHora) : "-";
+      const dataEnvio = formatarDataParaTabela(registo?.dataHora);
       const dataEnvioHtml = escaparHtml(dataEnvio);
       const dataIso = registo?.dataHora ? new Date(registo.dataHora).getTime() : 0;
-      const urlTrabalho = registo?.trabalhoUrl;
-      const linkHtml = urlTrabalho
-        ? `<a href="${escaparHtml(urlTrabalho)}" target="_blank" rel="noopener noreferrer">Ver</a>`
-        : "-";
+      const urlTrabalho = escaparHtml(registo?.trabalhoUrl || "");
+      const inputId = `corrected-file-${index}`;
 
       return `
-        <tr data-order="${dataIso}">
+        <tr data-order="${dataIso}" data-nome="${nome}" data-data-hora="${escaparHtml(registo?.dataHora || "")}" data-trabalho-url="${urlTrabalho}">
           <td>${nome}</td>
-          <td>
-            <span class="status-badge ${statusClass}">${statusLabel}</span>
-          </td>
+          <td><a href="${urlTrabalho}" target="_blank" rel="noopener noreferrer">Abrir trabalho</a></td>
           <td>${dataEnvioHtml}</td>
-          <td>${linkHtml}</td>
+          <td>
+            <label class="visually-hidden" for="${inputId}">Ficheiro corrigido de ${nome}</label>
+            <input id="${inputId}" class="corrected-file-input" type="file" />
+          </td>
+          <td><button class="btn btn-secondary send-corrected-btn" type="button">Enviar</button></td>
         </tr>
       `;
     }).join("");
 
   worksList.innerHTML = `
-    <table class="works-table">
+    <table class="works-table manager-works-table">
       <thead>
         <tr>
           <th>Nome</th>
-          <th>Status</th>
-          <th>Data de envio</th>
-          <th>Ficheiro</th>
+          <th>Trabalho</th>
+          <th>Data/Hora</th>
+          <th>Ficheiro corrigido</th>
+          <th>Acção</th>
         </tr>
       </thead>
       <tbody>
@@ -141,6 +157,66 @@ function renderTabelaTrabalhos(registos) {
   setManagerMessage("");
 }
 
+async function enviarFicheiroCorrigido(botao) {
+  const linha = botao.closest("tr");
+  const inputFicheiro = linha?.querySelector(".corrected-file-input");
+  const ficheiro = inputFicheiro?.files?.[0];
+
+  if (!linha || !inputFicheiro) {
+    setManagerMessage("Não foi possível identificar o trabalho selecionado.", "error");
+    return;
+  }
+
+  if (!ficheiro) {
+    setManagerMessage("Seleccione o ficheiro corrigido antes de enviar.", "error");
+    inputFicheiro.focus();
+    return;
+  }
+
+  const nome = linha.dataset.nome || "";
+  const textoOriginal = botao.textContent;
+  botao.disabled = true;
+  botao.textContent = "A enviar...";
+  setManagerMessage(`A enviar ficheiro corrigido de ${nome}...`);
+
+  try {
+    const ficheiroBase64 = await fileToBase64(ficheiro);
+    const payload = {
+      acao: "enviarFicheiroCorrigido",
+      nome,
+      dataHora: linha.dataset.dataHora || "",
+      trabalhoUrl: linha.dataset.trabalhoUrl || "",
+      fileName: ficheiro.name,
+      mimeType: ficheiro.type || "application/octet-stream",
+      fileBase64: ficheiroBase64
+    };
+
+    const response = await fetch(WEB_APP_URL, {
+      method: "POST",
+      body: JSON.stringify(payload)
+    });
+
+    if (!response.ok) {
+      throw new Error(`Falha HTTP: ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    if (!data?.sucesso) {
+      throw new Error(data?.mensagem || "Erro ao enviar ficheiro corrigido.");
+    }
+
+    inputFicheiro.value = "";
+    setManagerMessage(data?.mensagem || `Ficheiro corrigido de ${nome} enviado com sucesso.`, "success");
+  } catch (erro) {
+    console.error("Erro ao enviar ficheiro corrigido:", erro);
+    setManagerMessage(erro?.message || "Erro ao enviar ficheiro corrigido.", "error");
+  } finally {
+    botao.disabled = false;
+    botao.textContent = textoOriginal;
+  }
+}
+
 async function carregarTrabalhosEnviados() {
   if (!gestorAutenticado) {
     setManagerMessage("Sessão inválida. Faça login novamente.", "error");
@@ -149,7 +225,7 @@ async function carregarTrabalhosEnviados() {
   }
 
   worksList.innerHTML = "";
-  setManagerMessage("A carregar lista de estudantes...");
+  setManagerMessage("A carregar trabalhos enviados...");
 
   try {
     const [nomesResponse, trabalhosResponse] = await Promise.all([
@@ -189,18 +265,21 @@ async function carregarTrabalhosEnviados() {
       }
     });
 
-    const registosCompletos = nomes.map((nome) => {
-      const nomeLimpo = String(nome || "").trim();
-      const trabalho = mapaTrabalhos.get(normalizeEmail(nomeLimpo));
-      return {
-        nome: nomeLimpo || "-",
-        enviado: Boolean(trabalho),
+    const nomesValidos = new Set(nomes.map((nome) => normalizeEmail(nome)));
+    const registosEnviados = Array.from(mapaTrabalhos.values())
+      .filter((trabalho) => {
+        const nomeNormalizado = normalizeEmail(trabalho?.nome);
+        return !nomesValidos.size || nomesValidos.has(nomeNormalizado);
+      })
+      .map((trabalho) => ({
+        nome: String(trabalho?.nome || "").trim() || "-",
+        enviado: true,
         dataHora: trabalho?.dataHora || "",
         trabalhoUrl: trabalho?.trabalhoUrl || ""
-      };
-    });
+      }))
+      .sort((a, b) => (new Date(b.dataHora || 0).getTime() || 0) - (new Date(a.dataHora || 0).getTime() || 0));
 
-    renderTabelaTrabalhos(registosCompletos);
+    renderTabelaTrabalhos(registosEnviados);
   } catch (erro) {
     console.error("Erro ao carregar trabalhos:", erro);
     worksList.innerHTML = "";
@@ -210,6 +289,14 @@ async function carregarTrabalhosEnviados() {
 
 loadWorksBtn.addEventListener("click", () => {
   carregarTrabalhosEnviados();
+});
+
+worksList.addEventListener("click", (event) => {
+  const botaoEnviar = event.target.closest(".send-corrected-btn");
+
+  if (botaoEnviar) {
+    enviarFicheiroCorrigido(botaoEnviar);
+  }
 });
 
 logoutManagerBtn.addEventListener("click", async () => {
