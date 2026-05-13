@@ -37,11 +37,11 @@ const orientandosToggleBtn = document.getElementById("orientandos-toggle");
 const orientandosSubmenu = document.getElementById("orientandos-submenu");
 const loadWorksBtn = document.getElementById("load-works");
 const logoutManagerBtn = document.getElementById("logout-manager");
+const managerHeading = document.getElementById("manager-heading");
 const managerMessage = document.getElementById("manager-message");
 const worksList = document.getElementById("works-list");
 
 let gestorAutenticado = false;
-let trabalhosCarregados = false;
 
 function setSubmenuExpanded(isExpanded) {
   orientandosSubmenu.classList.toggle("expanded", isExpanded);
@@ -70,6 +70,11 @@ function setManagerMessage(message, type = "") {
   if (type) {
     managerMessage.classList.add(type);
   }
+}
+
+function mostrarSecaoTrabalhos() {
+  managerHeading.classList.remove("hidden");
+  loadWorksBtn.classList.add("active");
 }
 
 function escaparHtml(texto) {
@@ -226,7 +231,7 @@ async function enviarFicheiroCorrigido(botao) {
 }
 
 async function carregarTrabalhosEnviados() {
-  trabalhosCarregados = true;
+  mostrarSecaoTrabalhos();
   if (!gestorAutenticado) {
     setManagerMessage("Sessão inválida. Faça login novamente.", "error");
     redirecionarParaLogin();
@@ -303,7 +308,6 @@ orientandosToggleBtn.addEventListener("click", () => {
 
 loadWorksBtn.addEventListener("click", () => {
   setSubmenuExpanded(true);
-  loadWorksBtn.classList.add("active");
   carregarTrabalhosEnviados();
 });
 
@@ -335,7 +339,5 @@ onAuthStateChanged(auth, (user) => {
     return;
   }
 
-  if (!trabalhosCarregados) {
-    carregarTrabalhosEnviados();
-  }
+  setManagerMessage("");
 });
